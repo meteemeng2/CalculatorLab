@@ -12,67 +12,33 @@ namespace CPE200Lab1
 {
     public partial class MainForm : Form
     {
-        bool hasDot;
-        bool isAllowBack;
-        bool isAfterOperater;
-        bool isAfterEqual;
-        bool isFirst = true;
-        bool isAfterMemory = false;
-        string firstOperand;
-        string operate;
-        string secondOperand;
-        double memory = 0;
-        enginecalculator engine = new enginecalculator();
+        private bool hasDot;
+        private bool isAllowBack;
+        private bool isAfterOperater;
+        private bool isAfterEqual;
+        private string firstOperand;
+        private string operate;
+        private double memory;
+        private CalculatorEngine engine;
 
-        private void resetAll(bool TrueIsDeleteM)
+        private void resetAll()
         {
             lblDisplay.Text = "0";
             isAllowBack = true;
             hasDot = false;
             isAfterOperater = false;
             isAfterEqual = false;
-            isFirst = true;
-            operate = null;
-            isAfterMemory = false;
-            if (TrueIsDeleteM)
-            {
-                memory = 0;
-            }
+            firstOperand = null;
         }
 
-        public void calculatewithengine(bool TrueIsCollectSecond)
-        {
-            if (lblDisplay.Text is "Error")
-            {
-                return;
-            }
-            if (TrueIsCollectSecond)
-            {
-                secondOperand = lblDisplay.Text;
-            }
-            string result = engine.calculate(operate, firstOperand, secondOperand);
-            while(result[result.Length - 1] is '0' || result[result.Length - 1] is '.')
-            {
-                result = result.Substring(0, result.Length - 1);
-            }
-            if (result is "E" || result.Length > 8)
-            {
-                lblDisplay.Text = "Error";
-            }
-            else
-            {
-                lblDisplay.Text = result;
-                firstOperand = result;
-            }
-        }
-
-       
+      
 
         public MainForm()
         {
             InitializeComponent();
-
-            resetAll(true);
+            memory = 0;
+            engine = new CalculatorEngine();
+            resetAll();
         }
 
         private void btnNumber_Click(object sender, EventArgs e)
@@ -81,9 +47,9 @@ namespace CPE200Lab1
             {
                 return;
             }
-            if (isAfterEqual || isAfterMemory)
+            if (isAfterEqual)
             {
-                resetAll(false);
+                resetAll();
             }
             if (isAfterOperater)
             {
@@ -93,13 +59,38 @@ namespace CPE200Lab1
             {
                 return;
             }
+            isAllowBack = true;
+            string digit = ((Button)sender).Text;
             if(lblDisplay.Text is "0")
             {
                 lblDisplay.Text = "";
             }
-            lblDisplay.Text += ((Button)sender).Text;
+            lblDisplay.Text += digit;
             isAfterOperater = false;
-            isAllowBack = true;
+        }
+
+        private void btnUnaryOperator_Click(object sender, EventArgs e)
+        {
+            if (lblDisplay.Text is "Error")
+            {
+                return;
+            }
+            if (isAfterOperater)
+            {
+                return;
+            }
+            operate = ((Button)sender).Text;
+            firstOperand = lblDisplay.Text;
+            string result = engine.unaryCalculate(operate, firstOperand);
+            if (result is "E" || result.Length > 8)
+            {
+                lblDisplay.Text = "Error";
+            }
+            else
+            {
+                lblDisplay.Text = result;
+            }
+
         }
 
         private void btnOperator_Click(object sender, EventArgs e)
@@ -110,17 +101,20 @@ namespace CPE200Lab1
             }
             if (isAfterOperater)
             {
-                operate = ((Button)sender).Text;
                 return;
             }
-            if (isFirst)
+            if(firstOperand != null)
             {
-                firstOperand = lblDisplay.Text;
-                isFirst = false;
-            }
-            else
-            {
-                calculatewithengine(true);
+                string secondOperand = lblDisplay.Text;
+                string result = engine.calculate(operate, firstOperand, secondOperand);
+                if (result is "E" || result.Length > 8)
+                {
+                    lblDisplay.Text = "Error";
+                }
+                else
+                {
+                    lblDisplay.Text = result;
+                }
             }
             operate = ((Button)sender).Text;
             switch (operate)
@@ -129,7 +123,11 @@ namespace CPE200Lab1
                 case "-":
                 case "X":
                 case "÷":
+                    firstOperand = lblDisplay.Text;
                     isAfterOperater = true;
+                    break;
+                case "%":
+                    // your code here
                     break;
             }
             isAllowBack = false;
@@ -137,16 +135,21 @@ namespace CPE200Lab1
 
         private void btnEqual_Click(object sender, EventArgs e)
         {
-            if (isAfterEqual)
+            if (lblDisplay.Text is "Error")
             {
-                calculatewithengine(false);
+                return;
+            }
+            string secondOperand = lblDisplay.Text;
+            string result = engine.calculate(operate, firstOperand, secondOperand);
+            if (result is "E" || result.Length > 8)
+            {
+                lblDisplay.Text = "Error";
             }
             else
             {
-                calculatewithengine(true);
+                lblDisplay.Text = result;
             }
             isAfterEqual = true;
-            isFirst = true;
         }
 
         private void btnDot_Click(object sender, EventArgs e)
@@ -157,24 +160,12 @@ namespace CPE200Lab1
             }
             if (isAfterEqual)
             {
-                resetAll(false);
+                resetAll();
             }
             if (lblDisplay.Text.Length is 8)
             {
                 return;
             }
-            if (hasDot)
-            {
-                hasDot = false;
-                for (int i = 0; i < lblDisplay.Text.Length; i++)
-                {
-                    if(lblDisplay.Text[i] is '.')
-                    {
-                        hasDot = true;
-                    }
-                }
-            }
-            
             if (!hasDot)
             {
                 lblDisplay.Text += ".";
@@ -190,7 +181,7 @@ namespace CPE200Lab1
             }
             if (isAfterEqual)
             {
-                resetAll(false);
+                resetAll();
             }
             // already contain negative sign
             if (lblDisplay.Text.Length is 8)
@@ -200,8 +191,7 @@ namespace CPE200Lab1
             if(lblDisplay.Text[0] is '-')
             {
                 lblDisplay.Text = lblDisplay.Text.Substring(1, lblDisplay.Text.Length - 1);
-            }
-            else
+            } else
             {
                 lblDisplay.Text = "-" + lblDisplay.Text;
             }
@@ -209,7 +199,7 @@ namespace CPE200Lab1
 
         private void btnClear_Click(object sender, EventArgs e)
         {
-            resetAll(false);
+            resetAll();
         }
 
         private void btnBack_Click(object sender, EventArgs e)
@@ -242,51 +232,38 @@ namespace CPE200Lab1
             }
         }
 
-        private void btnPercent_Click(object sender, EventArgs e)
+        private void btnMP_Click(object sender, EventArgs e)
         {
-            if (isFirst)
+            if(lblDisplay.Text is "Error")
             {
-                lblDisplay.Text = "0";
+                return;
             }
-            else
-            {
-                lblDisplay.Text = engine.percent(firstOperand, lblDisplay.Text);
-            }
-           
+            memory += Convert.ToDouble(lblDisplay.Text);
+            isAfterOperater = true;
         }
 
-        private void root_Click(object sender, EventArgs e)
+        private void btnMC_Click(object sender, EventArgs e)
         {
-            lblDisplay.Text = engine.root(lblDisplay.Text);
+            memory = 0;
         }
 
-        private void onedivideme_Click(object sender, EventArgs e)
+        private void btnMM_Click(object sender, EventArgs e)
         {
-            lblDisplay.Text = engine.onedividex(lblDisplay.Text);
-        }
-
-        private void M_Click(object sender, EventArgs e)
-        {
-            switch (((Button)sender).Text[1])
+            if(lblDisplay.Text is "Error")
             {
-                case '+':
-                    memory += Convert.ToDouble(lblDisplay.Text);
-                    break;
-                case '-':
-                    memory -= Convert.ToDouble(lblDisplay.Text);
-                    break;
-                case 'R':
-                    lblDisplay.Text = Convert.ToString(memory);
-                    isAfterMemory = true;
-                    break;
-                case 'C':
-                    memory = 0;
-                    break;
-                case 'S':
-                    memory = Convert.ToDouble(lblDisplay.Text);
-                    break;
-                default: break;
+                return;
             }
+            memory -= Convert.ToDouble(lblDisplay.Text);
+            isAfterOperater = true;
+        }
+
+        private void btnMR_Click(object sender, EventArgs e)
+        {
+            if(lblDisplay.Text is "error")
+            {
+                return;
+            }
+            lblDisplay.Text = memory.ToString();
         }
     }
 }
