@@ -27,21 +27,36 @@ namespace CPE200Lab1
         }
         public string Process(string str)
         {
-            List<string> parts = str.Split(' ').ToList<string>();
-            string result;
-            while(parts.Count > 1)
+            string[] parts = str.Split(' ');
+            string first = "";
+            for (int i = 1; i < parts.Length - 1; i += 2)
             {
-                if(!(isNumber(parts[0]) && isOperator(parts[1]) && isNumber(parts[2])))
+                if(parts[i] is "X" || parts[i] is "÷")
                 {
-                    return "E";
-                } else
-                {
-                    result = calculate(parts[1], parts[0], parts[2], 4);
-                    parts.RemoveRange(0, 3);
-                    parts.Insert(0, result);
+                    parts[i + 1] = calculate(parts[i], parts[i - 1], parts[i + 1]);
+                    parts[i - 1] = "0";
+                    if(i > 1)
+                    {
+                        parts[i] = parts[i - 2];
+                    }
+                    else
+                    {
+                        parts[i] = "+";
+                    }
                 }
             }
-            return parts[0];
+            for (int i = 0; i < parts.Length - 1; i += 2)
+            {
+                if(i == 0)
+                {
+                    first = calculate(parts[1], parts[0], parts[2]);
+                }
+                else
+                {
+                    first = calculate(parts[i + 1], first, parts[i + 2]);
+                }
+            }
+            return first;
         }
         public string unaryCalculate(string operate, string operand, int maxOutputSize = 8)
         {

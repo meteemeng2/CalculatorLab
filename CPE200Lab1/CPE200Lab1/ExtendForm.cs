@@ -132,5 +132,10 @@ namespace CPE200Lab1
                 lblDisplay.Text += ".";
             }
         }
+
+        private void btnPercent_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }
